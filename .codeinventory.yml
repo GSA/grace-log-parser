@@ -1,0 +1,12 @@
+name: 'GSA/grace-log-parser'
+description: 'Lambda function to parse CloudWatch Alarms and send legible email to designated recipients'
+license: cc0-1.0
+openSourceProject: 1
+governmentWideReuseProject: 1
+tags:
+    - open-source
+    - opensource
+    - grace
+    - devsecops
+contact:
+    email: grace-staff@gsa.gov
