@@ -30,6 +30,7 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 	}
 
 	cwData := logsEvent.AWSLogs.Data
+
 	compressedPayload, err := base64.StdEncoding.DecodeString(cwData)
 	if err != nil {
 		log.Fatalf("error decoding base64 cloudwatch data: %v", err)
@@ -46,6 +47,7 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 	}
 
 	payload := make(map[string]interface{})
+
 	err = json.Unmarshal(s, &payload)
 	if err != nil {
 		log.Fatalf("error unmarshalling cloudwatch data to map: %v", err)
@@ -55,9 +57,9 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 
 	logEvents := payload["logEvents"].([]map[string]interface{})
 
-	// todo: refactor
 	for _, logEvent := range logEvents {
 		log.Printf("**Event (%T): %v", logEvent, logEvent)
+
 		if message, ok := logEvent["message"].(map[string]interface{}); ok {
 			if eventType, ok := message["eventName"].(string); ok {
 				if contains(eventTypes, eventType) {
@@ -75,6 +77,7 @@ func contains(s []string, str string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -87,12 +90,14 @@ func makeBody(m map[string]interface{}, x []string) (b string) {
 	b += "UserAgent: " + m["userAgent"].(string) + "\n"
 	b += "AWS Region: " + m["awsRegion"].(string) + "\n"
 	b += "SourceIPAddress: " + m["sourceIPAddress"].(string) + "\n"
+
 	if !contains(x, "userIdentity") {
 		if ui, ok := m["userIdentity"].(map[string]interface{}); ok {
 			b += "\nUserIdentity \n\n"
 			b += parseSesUserIdentity(ui, x)
 		}
 	}
+
 	return b
 }
 
@@ -109,6 +114,7 @@ func parseSesUserIdentity(ui map[string]interface{}, x []string) (s string) {
 			log.Printf("warning: Unknown UserIdentity value type: %T", v)
 		}
 	}
+
 	return s
 }
 
@@ -132,10 +138,12 @@ func sendEmail(b string) {
 		},
 		Source: aws.String(os.Getenv("FROM_EMAIL")),
 	}
+
 	resp, err := svc.SendEmail(&input)
 	if err != nil {
 		log.Fatalf("error sending email: %v", err)
 	}
+
 	log.Printf("**SES Response:\n%v", resp)
 }
 
