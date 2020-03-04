@@ -23,6 +23,8 @@ jobs:
           paths:
             - ./release/*
   validate_terraform:
+    environment:
+        AWS_DEFAULT_REGION: us-east-1
     docker:
       - image: hashicorp/terraform:light
     steps:
