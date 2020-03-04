@@ -1,10 +1,10 @@
 resource "aws_lambda_function" "self" {
-  filename         = data.archive_file.lambda_zip_inline.output_path
-  source_code_hash = data.archive_file.lambda_zip_inline.output_base64sha256
+  filename         = var.source_file
+  source_code_hash = filesha256(var.source_file)
   function_name    = "grace-${var.env}-log-parser"
   role             = aws_iam_role.self.arn
-  handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.8"
+  handler          = "grace-log-parser"
+  runtime          = "go1.x"
   timeout          = 500
   environment {
     variables = {
@@ -14,12 +14,6 @@ resource "aws_lambda_function" "self" {
       REGION     = var.region
     }
   }
-}
-
-data "archive_file" "lambda_zip_inline" {
-  type        = "zip"
-  output_path = "/tmp/lambda_zip_inline.zip"
-  source_file = "${path.module}/handler/lambda_function.py"
 }
 
 # Lambda subscription to CloudWatch log group

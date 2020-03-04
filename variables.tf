@@ -29,6 +29,12 @@ variable "source_arn" {
   description = "(required) Source ARN of Cloudtrail Log Group"
 }
 
+variable "source_file" {
+  type        = string
+  description = "(optional) full or relative path to zipped binary of lambda handler"
+  default     = "../release/grace-log-parser.zip"
+}
+
 variable "log_group_name" {
   description = "(required) Cloudtrail Log Group Name"
 }
