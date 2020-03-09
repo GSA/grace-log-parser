@@ -47,8 +47,8 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 }
 
 // handleEvents ... parses log messages out of log events
-func handleEvents(events []interface{}, includedEventNames, excludedKeys []string) {
-	for _, logEvent := range events {
+func handleEvents(logEvents []interface{}, includedEventNames, excludedKeys []string) {
+	for _, logEvent := range logEvents {
 		log.Printf("**Event (%T): %v", logEvent, logEvent)
 
 		if mStr, ok := logEvent.(map[string]interface{})["message"]; ok {
