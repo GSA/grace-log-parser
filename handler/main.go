@@ -34,16 +34,19 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 	compressedPayload, err := base64.StdEncoding.DecodeString(cwData)
 	if err != nil {
 		log.Fatalf("error decoding base64 cloudwatch data: %v", err)
+		return
 	}
 
 	r, err := gzip.NewReader(bytes.NewReader(compressedPayload))
 	if err != nil {
 		log.Fatalf("error decompressing cloudwatch data: %v", err)
+		return
 	}
 
 	s, err := ioutil.ReadAll(r)
 	if err != nil {
 		log.Fatalf("error reading decompressed cloudwatch data: %v", err)
+		return
 	}
 
 	payload := make(map[string]interface{})
@@ -51,18 +54,33 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 	err = json.Unmarshal(s, &payload)
 	if err != nil {
 		log.Fatalf("error unmarshalling cloudwatch data to map: %v", err)
+		return
 	}
 
 	log.Printf("***Payload:\n%v", payload)
 
-	logEvents := payload["logEvents"].([]map[string]interface{})
+	logEvents := payload["logEvents"].([]interface{})
 
 	for _, logEvent := range logEvents {
 		log.Printf("**Event (%T): %v", logEvent, logEvent)
 
-		if message, ok := logEvent["message"].(map[string]interface{}); ok {
-			if eventType, ok := message["eventName"].(string); ok {
-				if contains(eventTypes, eventType) {
+		if mStr, ok := logEvent.(map[string]interface{})["message"]; ok {
+			log.Printf("**message (%T):\n%v", mStr, mStr)
+
+			message := make(map[string]interface{})
+
+			err = json.Unmarshal([]byte(mStr.(string)), &message)
+			if err != nil {
+				log.Fatalf("error unmarshalling log event message: %v", err)
+				return
+			}
+
+			if eventType, ok := message["eventName"]; ok {
+				log.Printf("eventType (%T):\n%v\n", eventType, eventType)
+
+				if contains(eventTypes, eventType.(string)) {
+					log.Println("**matching eventType**")
+
 					body := makeBody(message, excludedKeys)
 					sendEmail(body)
 				}
