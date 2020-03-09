@@ -21,7 +21,7 @@ import (
 // eventHandler ... Handles log events by parsing them, filtering and sending
 //  emails for select event types
 func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
-	eventTypes := []string{
+	includedEventNames := []string{
 		"ConsoleLogin",
 	}
 	excludedKeys := []string{
@@ -43,7 +43,12 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 		return
 	}
 
-	for _, logEvent := range logEvents {
+	handleEvents(logEvents, includedEventNames, excludedKeys)
+}
+
+// handleEvents ... parses log messages out of log events
+func handleEvents(events []interface{}, includedEventNames, excludedKeys []string) {
+	for _, logEvent := range events {
 		log.Printf("**Event (%T): %v", logEvent, logEvent)
 
 		if mStr, ok := logEvent.(map[string]interface{})["message"]; ok {
@@ -57,26 +62,32 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 				return
 			}
 
-			err = json.Unmarshal([]byte(s), &message)
+			err := json.Unmarshal([]byte(s), &message)
 			if err != nil {
 				log.Fatalf("error unmarshalling log event message: %v", err)
 				return
 			}
 
-			if eventType, ok := message["eventName"]; ok {
-				log.Printf("eventType (%T):\n%v\n", eventType, eventType)
-
-				if contains(eventTypes, eventType.(string)) {
-					log.Println("**matching eventType**")
-
-					body := makeBody(message, excludedKeys)
-					sendEmail(body)
-				}
-			}
+			handleMessage(message, includedEventNames, excludedKeys)
 		}
 	}
 }
 
+// handleMessage ... filters log event messages and sends email on matches
+func handleMessage(message map[string]interface{}, includedEventNames, excludedKeys []string) {
+	if eventType, ok := message["eventName"]; ok {
+		log.Printf("eventType (%T):\n%v\n", eventType, eventType)
+
+		if contains(includedEventNames, eventType.(string)) {
+			log.Println("**matching eventType**")
+
+			body := makeBody(message, excludedKeys)
+			sendEmail(body)
+		}
+	}
+}
+
+// parseLogDataToPayload ... decodes, decompresses and parses CloudWatch log event data
 func parseLogDataToPayload(data string) (payload map[string]interface{}, err error) {
 	source := strings.NewReader(data)
 	encoder := base64.NewDecoder(base64.StdEncoding, io.Reader(source))
@@ -102,6 +113,7 @@ func parseLogDataToPayload(data string) (payload map[string]interface{}, err err
 	return payload, nil
 }
 
+// contains ... checks if a string is contained in an array of strings
 func contains(s []string, str string) bool {
 	for _, a := range s {
 		if a == str {
@@ -112,6 +124,7 @@ func contains(s []string, str string) bool {
 	return false
 }
 
+// makeBody ... makes a text email body from a CloudWatch log event message
 func makeBody(m map[string]interface{}, x []string) (b string) {
 	b = "This is the header *Test*\n\n"
 	b += "EventType: " + m["eventType"].(string) + "\n"
@@ -132,6 +145,7 @@ func makeBody(m map[string]interface{}, x []string) (b string) {
 	return b
 }
 
+// parseSesUserIdentity ... recursively filters and parses UserIdentity data
 func parseSesUserIdentity(ui map[string]interface{}, x []string) (s string) {
 	for k, i := range ui {
 		switch v := i.(type) {
@@ -149,6 +163,7 @@ func parseSesUserIdentity(ui map[string]interface{}, x []string) (s string) {
 	return s
 }
 
+// sendEmail ... Sends an email via AWS Simple Email Service (SES)
 func sendEmail(b string) {
 	sess := session.Must(session.NewSession())
 	svc := ses.New(sess)
