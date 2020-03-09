@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/base64"
@@ -78,13 +77,9 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 }
 
 func parseLogDataToPayload(data string) (payload map[string]interface{}, err error) {
-	compressedPayload, err := base64.StdEncoding.DecodeString(data)
-	if err != nil {
-		log.Fatalf("error decoding base64 cloudwatch data: %v", err)
-		return
-	}
-
-	r, err := gzip.NewReader(bytes.NewReader(compressedPayload))
+	source := strings.NewReader(data)
+	encoder := base64.NewDecoder(base64.StdEncoding, &source)
+	r, err := gzip.NewReader(encoder)
 	if err != nil {
 		log.Fatalf("error decompressing cloudwatch data: %v", err)
 		return
