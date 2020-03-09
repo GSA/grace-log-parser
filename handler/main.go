@@ -29,31 +29,9 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 		"principalId",
 	}
 
-	cwData := logsEvent.AWSLogs.Data
-
-	compressedPayload, err := base64.StdEncoding.DecodeString(cwData)
+	payload, err := parseLogDataToPayload(logsEvent.AWSLogs.Data)
 	if err != nil {
-		log.Fatalf("error decoding base64 cloudwatch data: %v", err)
-		return
-	}
-
-	r, err := gzip.NewReader(bytes.NewReader(compressedPayload))
-	if err != nil {
-		log.Fatalf("error decompressing cloudwatch data: %v", err)
-		return
-	}
-
-	s, err := ioutil.ReadAll(r)
-	if err != nil {
-		log.Fatalf("error reading decompressed cloudwatch data: %v", err)
-		return
-	}
-
-	payload := make(map[string]interface{})
-
-	err = json.Unmarshal(s, &payload)
-	if err != nil {
-		log.Fatalf("error unmarshalling cloudwatch data to map: %v", err)
+		log.Fatalf("error parsing log data to payload: %v", err)
 		return
 	}
 
@@ -97,6 +75,36 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 			}
 		}
 	}
+}
+
+func parseLogDataToPayload(data string) (payload map[string]interface{}, err error) {
+	compressedPayload, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		log.Fatalf("error decoding base64 cloudwatch data: %v", err)
+		return
+	}
+
+	r, err := gzip.NewReader(bytes.NewReader(compressedPayload))
+	if err != nil {
+		log.Fatalf("error decompressing cloudwatch data: %v", err)
+		return
+	}
+
+	s, err := ioutil.ReadAll(r)
+	if err != nil {
+		log.Fatalf("error reading decompressed cloudwatch data: %v", err)
+		return
+	}
+
+	payload := make(map[string]interface{})
+
+	err = json.Unmarshal(s, &payload)
+	if err != nil {
+		log.Fatalf("error unmarshalling cloudwatch data to map: %v", err)
+		return nil, err
+	}
+
+	return payload, nil
 }
 
 func contains(s []string, str string) bool {
