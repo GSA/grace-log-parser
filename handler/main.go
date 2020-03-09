@@ -59,7 +59,11 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 
 	log.Printf("***Payload:\n%v", payload)
 
-	logEvents := payload["logEvents"].([]interface{})
+	logEvents, ok := payload["logEvents"].([]interface{})
+	if !ok {
+		log.Fatalf("error asserting payload[\"logEvents\"].([]interface{}")
+		return
+	}
 
 	for _, logEvent := range logEvents {
 		log.Printf("**Event (%T): %v", logEvent, logEvent)
@@ -69,7 +73,13 @@ func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
 
 			message := make(map[string]interface{})
 
-			err = json.Unmarshal([]byte(mStr.(string)), &message)
+			s, ok := mStr.(string)
+			if !ok {
+				log.Fatalf("error asserting mStr.(string)")
+				return
+			}
+
+			err = json.Unmarshal([]byte(s), &message)
 			if err != nil {
 				log.Fatalf("error unmarshalling log event message: %v", err)
 				return
