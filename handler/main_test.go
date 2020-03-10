@@ -46,6 +46,7 @@ func TestEventHandler(t *testing.T) {
 	}
 	for name, tc := range tt {
 		tc := tc
+
 		t.Run(name, func(t *testing.T) {
 			err := eventHandler(tc.ctx, tc.logsEvent)
 			if tc.expectedErr == "" && err != nil {
