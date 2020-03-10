@@ -45,37 +45,46 @@ type IAMUserIdentity struct {
 
 // eventHandler ... Handles log events by parsing them, filtering and sending
 //  emails for select event types
-func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) {
+func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) error {
 	data, err := logsEvent.AWSLogs.Parse()
 	if err != nil {
-		log.Fatalf("error parsing log data: %v", err)
-		return
+		log.Printf("error parsing log data: %v", err)
+		return err
 	}
 
-	handleEvents(data.LogEvents)
+	return handleEvents(data.LogEvents)
 }
 
 // handleEvents ... parses log messages out of log events
-func handleEvents(logEvents []events.CloudwatchLogsLogEvent) {
+func handleEvents(logEvents []events.CloudwatchLogsLogEvent) error {
 	for _, logEvent := range logEvents {
 		var message ConsoleLoginEvent
 
 		err := json.Unmarshal([]byte(logEvent.Message), &message)
 		if err != nil {
-			log.Fatalf("error unmarshalling log event message: %v", err)
-			return
+			log.Printf("error unmarshalling log event message: %v", err)
+			return err
 		}
 
-		handleMessage(&message)
+		err = handleMessage(&message)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 // handleMessage ... filters log event messages and sends email on matches
-func handleMessage(message *ConsoleLoginEvent) {
+func handleMessage(message *ConsoleLoginEvent) error {
+	log.Printf("** " + message.EventName + " event **")
+
 	if message.EventName == "ConsoleLogin" {
 		body := makeBody(message)
-		sendEmail(body)
+		return sendEmail(body)
 	}
+
+	return nil
 }
 
 // makeBody ... makes a text email body from a CloudWatch log event message
@@ -97,7 +106,7 @@ func makeBody(e *ConsoleLoginEvent) (b string) {
 }
 
 // sendEmail ... Sends an email via AWS Simple Email Service (SES)
-func sendEmail(b string) {
+func sendEmail(b string) error {
 	sess := session.Must(session.NewSession())
 	svc := ses.New(sess)
 	input := ses.SendEmailInput{
@@ -120,10 +129,13 @@ func sendEmail(b string) {
 
 	resp, err := svc.SendEmail(&input)
 	if err != nil {
-		log.Fatalf("error sending email: %v", err)
+		log.Printf("error sending email: %v", err)
+		return err
 	}
 
 	log.Printf("**SES Response:\n%v", resp)
+
+	return nil
 }
 
 func main() {
