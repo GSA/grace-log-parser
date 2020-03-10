@@ -24,10 +24,12 @@ else ifeq ($(strip $(CIRCLE_TAG)),)
 	@echo "CIRCLE_TAG must be set"
 	@exit 0
 else ifeq ($(shell echo $(CIRCLE_TAG) | egrep '^v\d+\.\d+\.\d+'),)
-	@echo "CIRCLE_TAG must match version pattern (i.e. v.1.2.3)"
+	@echo "CIRCLE_TAG must match version pattern (i.e. v1.2.3)"
 	@exit 0
-else
+else ifeq ($(CIRCLE_BRANCH), "master")
 	ghr -u $(CIRCLE_PROJECT_USERNAME) -r $(CIRCLE_PROJECT_REPONAME) -c $(CIRCLE_SHA1) -n $(CIRCLE_TAG) -delete $(CIRCLE_TAG) $(RELEASEDIR)
+else
+	ghr -prerelease -u $(CIRCLE_PROJECT_USERNAME) -r $(CIRCLE_PROJECT_REPONAME) -c $(CIRCLE_SHA1) -n $(CIRCLE_TAG) -delete $(CIRCLE_TAG) $(RELEASEDIR)
 endif
 
 clean:
