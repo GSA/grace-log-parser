@@ -33,16 +33,22 @@ func TestEventHandler(t *testing.T) {
 			},
 			expectedErr: "",
 		},
-		/* Need to be able to mock SES service
+		"bad message": {
+			logsEvent: events.CloudwatchLogsEvent{
+				AWSLogs: events.CloudwatchLogsRawData{
+					Data: "H4sIAOTqaF4AA6tWUMrJT3ctS80rKVayUoiuVspNLS5OTE8FcpSqlWpjFWq5AICclQgkAAAA",
+				},
+			},
+			expectedErr: "unexpected end of JSON input",
+		},
 		"matching event": {
 			logsEvent: events.CloudwatchLogsEvent{
 				AWSLogs: events.CloudwatchLogsRawData{
 					Data: "H4sIAGUGaF4AA6tWUMrJT3ctS80rKVayUoiuVspNLS5OTE8FcpSqFWKUUkFSfom5qTFAkRgl5/y84vycVJ/89My8GKVapdpYhVouAJbAiGdFAAAA",
 				},
 			},
-			expectedErr: "",
+			expectedErr: "MissingRegion: could not find region configuration",
 		},
-		*/
 	}
 	for name, tc := range tt {
 		tc := tc
