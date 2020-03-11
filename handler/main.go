@@ -97,10 +97,10 @@ func makeBody(e *ConsoleLoginEvent) (b string) {
 	b += "AWS Region: " + e.AWSRegion + "\n"
 	b += "SourceIPAddress: " + e.SourceIPAddress + "\n"
 
-	b += "\nUserIdentity \n\n"
+	b += "\nUserIdentity\n\n"
 	b += "Type: " + e.UserIdentity.Type + "\n"
-	b += "AccountID:" + e.UserIdentity.AccountID + "\n"
-	b += "UserName:" + e.UserIdentity.UserName + "\n"
+	b += "AccountID: " + e.UserIdentity.AccountID + "\n"
+	b += "UserName: " + e.UserIdentity.UserName + "\n"
 
 	return b
 }

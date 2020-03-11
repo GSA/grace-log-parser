@@ -57,3 +57,57 @@ func TestEventHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestMakeBody(t *testing.T) {
+	tt := map[string]struct {
+		e        ConsoleLoginEvent
+		expected string
+	}{
+		"empty event": {
+			expected: "EventType: \nEventID: \nEventTime: \nEventName: \nUserAgent: \n" +
+				"AWS Region: \nSourceIPAddress: \n\nUserIdentity\n\nType: \nAccountID: \n" +
+				"UserName: \n",
+		},
+		"event": {
+			e: ConsoleLoginEvent{
+				EventType:       "test1",
+				EventID:         "testID",
+				EventTime:       "testTime",
+				EventName:       "testName",
+				UserAgent:       "testAgent",
+				AWSRegion:       "testRegion",
+				SourceIPAddress: "testIP",
+
+				UserIdentity: IAMUserIdentity{
+					Type:      "testType",
+					AccountID: "testID",
+					UserName:  "testName",
+				},
+			},
+			expected: `EventType: test1
+EventID: testID
+EventTime: testTime
+EventName: testName
+UserAgent: testAgent
+AWS Region: testRegion
+SourceIPAddress: testIP
+
+UserIdentity
+
+Type: testType
+AccountID: testID
+UserName: testName
+`,
+		},
+	}
+	for name, tc := range tt {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			body := makeBody(&tc.e)
+			if tc.expected != body {
+				t.Errorf("eventHandler() failed. Expected:\n%q\nGot:\n%q\n", tc.expected, body)
+			}
+		})
+	}
+}
