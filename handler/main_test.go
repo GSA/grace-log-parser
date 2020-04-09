@@ -135,12 +135,9 @@ func TestHtmlBody(t *testing.T) {
   <style>
     table {border-collapse: collapse;}
     td, th {border: 1px solid Black;}
-    th {background: LightGray;}
+    th {background-color: RoyalBlue; color: White; font-weight: bold;}
     tr:nth-child(even) {background: #F3F3F3;}
     tr:nth-child(odd) {background: White;}
-    .resource {background-color: RoyalBlue; color: White; font-weight: bold;}
-    .blank {background-color: White; border: none;}
-    .group {background-color: LightBlue;}
   </style>
 </head>
 <body>
@@ -185,12 +182,9 @@ func TestHtmlBody(t *testing.T) {
   <style>
     table {border-collapse: collapse;}
     td, th {border: 1px solid Black;}
-    th {background: LightGray;}
+    th {background-color: RoyalBlue; color: White; font-weight: bold;}
     tr:nth-child(even) {background: #F3F3F3;}
     tr:nth-child(odd) {background: White;}
-    .resource {background-color: RoyalBlue; color: White; font-weight: bold;}
-    .blank {background-color: White; border: none;}
-    .group {background-color: LightBlue;}
   </style>
 </head>
 <body>
@@ -224,6 +218,7 @@ func TestHtmlBody(t *testing.T) {
 			if tc.expected != body {
 				t.Errorf("eventHandler() failed. Expected:\n%q\nGot:\n%q\n", tc.expected, body)
 			}
+			t.Log(body)
 		})
 	}
 }
