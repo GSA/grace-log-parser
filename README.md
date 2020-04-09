@@ -52,7 +52,6 @@ module "grace-log-parser" {
 | env | (optional) The environment in which the script is running (development | test | production) |
 | recipients | (required) comma delimited list of AWS SES eMail recipients |
 | sender | (required) eMail address of sender for AWS SES |
-| subject | (optional) Subject Header of  Email sent notifications |
 | region | (optional) AWS region to deploy lambda function. |
 | source_arn | (required) Source ARN of Cloudtrail Log Group |
 | source_file | "(optional) full or relative path to zipped binary of lambda handler" |

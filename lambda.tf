@@ -1,3 +1,5 @@
+data "aws_iam_account_alias" "current" {}
+
 resource "aws_lambda_function" "self" {
   filename         = var.source_file
   source_code_hash = filesha256(var.source_file)
@@ -8,10 +10,10 @@ resource "aws_lambda_function" "self" {
   timeout          = 500
   environment {
     variables = {
-      TO_EMAIL   = var.recipients
-      FROM_EMAIL = var.sender
-      SUBJECT    = var.subject
-      REGION     = var.region
+      TO_EMAIL      = var.recipients
+      FROM_EMAIL    = var.sender
+      ACCOUNT_ALIAS = data.aws_iam_account_alias.current.account_alias
+      REGION        = var.region
     }
   }
 }
