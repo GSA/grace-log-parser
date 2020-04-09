@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"html/template"
 	"log"
 	"os"
 	"strings"
@@ -43,6 +45,12 @@ type IAMUserIdentity struct {
 	UserName  string `json:"userName"`
 }
 
+// emailData type for email html template
+type emailData struct {
+	AccountAlias string
+	Event        *ConsoleLoginEvent
+}
+
 // eventHandler ... Handles log events by parsing them, filtering and sending
 //  emails for select event types
 func eventHandler(ctx context.Context, logsEvent events.CloudwatchLogsEvent) error {
@@ -80,15 +88,14 @@ func handleMessage(message *ConsoleLoginEvent) error {
 	log.Printf("** " + message.EventName + " event **")
 
 	if message.EventName == "ConsoleLogin" {
-		body := makeBody(message)
-		return sendEmail(body)
+		return message.sendEmail()
 	}
 
 	return nil
 }
 
-// makeBody ... makes a text email body from a CloudWatch log event message
-func makeBody(e *ConsoleLoginEvent) (b string) {
+// textBody makes a text email body from a CloudWatch log event message
+func (e *ConsoleLoginEvent) textBody() (b string) {
 	b += "EventType: " + e.EventType + "\n"
 	b += "EventID: " + e.EventID + "\n"
 	b += "EventTime: " + e.EventTime + "\n"
@@ -105,8 +112,26 @@ func makeBody(e *ConsoleLoginEvent) (b string) {
 	return b
 }
 
-// sendEmail ... Sends an email via AWS Simple Email Service (SES)
-func sendEmail(b string) error {
+// htmlBody makes a html email body from a CloudWatch log event message
+func (e *ConsoleLoginEvent) htmlBody() (b string) {
+	tmpl := template.Must(template.ParseFiles("email.html"))
+	data := emailData{
+		Event:        e,
+		AccountAlias: os.Getenv("ACCOUNT_ALIAS"),
+	}
+	buf := new(bytes.Buffer)
+
+	err := tmpl.Execute(buf, data)
+	if err != nil {
+		log.Printf("Error creating html email body: %v\n", err)
+		return ""
+	}
+
+	return buf.String()
+}
+
+// sendEmail sends an email via AWS Simple Email Service (SES)
+func (e *ConsoleLoginEvent) sendEmail() error {
 	sess := session.Must(session.NewSession())
 	svc := ses.New(sess)
 	input := ses.SendEmailInput{
@@ -117,11 +142,14 @@ func sendEmail(b string) error {
 		Message: &ses.Message{
 			Body: &ses.Body{
 				Text: &ses.Content{
-					Data: aws.String(b),
+					Data: aws.String(e.textBody()),
+				},
+				Html: &ses.Content{
+					Data: aws.String(e.htmlBody()),
 				},
 			},
 			Subject: &ses.Content{
-				Data: aws.String("Testing Go Port refactor 3"),
+				Data: aws.String(e.EventType + " " + os.Getenv("ACCOUNT_ALIAS")),
 			},
 		},
 		Source: aws.String(os.Getenv("FROM_EMAIL")),

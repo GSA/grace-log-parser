@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -64,7 +65,7 @@ func TestEventHandler(t *testing.T) {
 	}
 }
 
-func TestMakeBody(t *testing.T) {
+func TestTextBody(t *testing.T) {
 	tt := map[string]struct {
 		e        ConsoleLoginEvent
 		expected string
@@ -110,10 +111,114 @@ UserName: testName
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-			body := makeBody(&tc.e)
+			body := tc.e.textBody()
 			if tc.expected != body {
 				t.Errorf("eventHandler() failed. Expected:\n%q\nGot:\n%q\n", tc.expected, body)
 			}
+		})
+	}
+}
+
+// nolint: funlen
+func TestHtmlBody(t *testing.T) {
+	err := os.Setenv("ACCOUNT_ALIAS", "test-account-alias")
+	if err != nil {
+		t.Fatalf("Unexpected error setting ACCOUNT_ALIAS: %v\n", err)
+	}
+
+	tt := map[string]struct {
+		e        ConsoleLoginEvent
+		expected string
+	}{
+		"empty event": {
+			expected: `<head>
+  <style>
+    table {border-collapse: collapse;}
+    td, th {border: 1px solid Black;}
+    th {background-color: RoyalBlue; color: White; font-weight: bold;}
+    tr:nth-child(even) {background: #F3F3F3;}
+    tr:nth-child(odd) {background: White;}
+  </style>
+</head>
+<body>
+  <h1> in test-account-alias</h1>
+  <table>
+    <tr><th colspan="2">Event Details</th></tr>
+    <tr><td>EventType</td><td></td></tr>
+    <tr><td>EventID</td><td></td></tr>
+    <tr><td>EventTime</td><td></td></tr>
+    <tr><td>EventName</td><td></td></tr>
+    <tr><td>UserAgent</td><td></td></tr>
+    <tr><td>AWS Region</td><td></td></tr>
+    <tr><td>SourceIPAddress</td><td></td></tr>
+  </table>
+  &nbsp;
+  <table>
+    <tr><th colspan="2">UserIdentity</th></tr>
+    <tr><td>Type</td><td></td></tr>
+    <tr><td>AccountID</td><td></td></tr>
+    <tr><td>UserName</td><td></td></tr>
+  </table>
+</body>
+`,
+		},
+		"event": {
+			e: ConsoleLoginEvent{
+				EventType:       "test1",
+				EventID:         "testID",
+				EventTime:       "testTime",
+				EventName:       "testName",
+				UserAgent:       "testAgent",
+				AWSRegion:       "testRegion",
+				SourceIPAddress: "testIP",
+
+				UserIdentity: IAMUserIdentity{
+					Type:      "testType",
+					AccountID: "testID",
+					UserName:  "testName",
+				},
+			},
+			expected: `<head>
+  <style>
+    table {border-collapse: collapse;}
+    td, th {border: 1px solid Black;}
+    th {background-color: RoyalBlue; color: White; font-weight: bold;}
+    tr:nth-child(even) {background: #F3F3F3;}
+    tr:nth-child(odd) {background: White;}
+  </style>
+</head>
+<body>
+  <h1>test1 in test-account-alias</h1>
+  <table>
+    <tr><th colspan="2">Event Details</th></tr>
+    <tr><td>EventType</td><td>test1</td></tr>
+    <tr><td>EventID</td><td>testID</td></tr>
+    <tr><td>EventTime</td><td>testTime</td></tr>
+    <tr><td>EventName</td><td>testName</td></tr>
+    <tr><td>UserAgent</td><td>testAgent</td></tr>
+    <tr><td>AWS Region</td><td>testRegion</td></tr>
+    <tr><td>SourceIPAddress</td><td>testIP</td></tr>
+  </table>
+  &nbsp;
+  <table>
+    <tr><th colspan="2">UserIdentity</th></tr>
+    <tr><td>Type</td><td>testType</td></tr>
+    <tr><td>AccountID</td><td>testID</td></tr>
+    <tr><td>UserName</td><td>testName</td></tr>
+  </table>
+</body>
+`,
+		},
+	}
+	for name, tc := range tt {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			body := tc.e.htmlBody()
+			if tc.expected != body {
+				t.Errorf("eventHandler() failed. Expected:\n%q\nGot:\n%q\n", tc.expected, body)
+			}
+			t.Log(body)
 		})
 	}
 }

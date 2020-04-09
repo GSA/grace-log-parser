@@ -14,12 +14,6 @@ variable "sender" {
   description = "(required) eMail address of sender for AWS SES"
 }
 
-variable "subject" {
-  type        = string
-  description = "(optional) Subject Header of  Email sent notifications"
-  default     = "*Test* Grace log-parsing email"
-}
-
 variable "region" {
   description = "(optional) AWS region to deploy lambda function."
   default     = "us-east-1"

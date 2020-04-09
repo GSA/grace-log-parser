@@ -29,19 +29,13 @@ resource "aws_iam_policy" "self" {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "graceLogParserLogs",
+            "Sid": "graceLogParser",
             "Effect": "Allow",
             "Action": [
-                "logs:*"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Sid": "graceLogParserSES",
-            "Effect": "Allow",
-            "Action": [
-                "ses:SendEmail",
-                "ses:SendRawEmail"
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "ses:SendEmail"
             ],
             "Resource": "*"
         }
