@@ -12,7 +12,7 @@ export GO111MODULE=on
 build: test clean
 	mkdir -p $(RELEASEDIR)
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(RELEASEDIR)$(CIRCLE_PROJECT_REPONAME) -v
-	zip -j $(RELEASEDIR)$(CIRCLE_PROJECT_REPONAME).zip $(RELEASEDIR)$(CIRCLE_PROJECT_REPONAME)
+	zip -j $(RELEASEDIR)$(CIRCLE_PROJECT_REPONAME).zip $(RELEASEDIR)$(CIRCLE_PROJECT_REPONAME) email.html
 	rm -f $(RELEASEDIR)$(CIRCLE_PROJECT_REPONAME)
 
 release: build
@@ -22,9 +22,6 @@ ifeq ($(strip $(GITHUB_TOKEN)),)
 	@exit 0
 else ifeq ($(strip $(CIRCLE_TAG)),)
 	@echo "CIRCLE_TAG must be set"
-	@exit 0
-else ifeq ($(shell echo $(CIRCLE_TAG) | egrep '^v\d+\.\d+\.\d+'),)
-	@echo "CIRCLE_TAG must match version pattern (i.e. v1.2.3)"
 	@exit 0
 else ifeq ($(CIRCLE_BRANCH), "master")
 	ghr -u $(CIRCLE_PROJECT_USERNAME) -r $(CIRCLE_PROJECT_REPONAME) -c $(CIRCLE_SHA1) -n $(CIRCLE_TAG) -delete $(CIRCLE_TAG) $(RELEASEDIR)
