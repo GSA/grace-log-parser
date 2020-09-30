@@ -1,10 +1,14 @@
 # GRACE Log Parser [![License](https://img.shields.io/badge/license-CC0-blue)](LICENSE.md) [![GoDoc](https://img.shields.io/badge/go-documentation-blue.svg)](https://godoc.org/github.com/GSA/grace-log-parser/aws) [![CircleCI](https://circleci.com/gh/GSA/grace-log-parser.svg?style=shield)](https://circleci.com/gh/GSA/grace-log-parser) [![Go Report Card](https://goreportcard.com/badge/github.com/GSA/grace-log-parser)](https://goreportcard.com/report/github.com/GSA/grace-log-parser)
 
-Lambda function to parse CloudWatch Alarms and send legible email to designated recipients
+Lambda function that parses Cloudwatch events and performs different actions based on enabled modules and sub-modules
+
+This function is executed on a configurable interval (defaults to 5m) stores the last read event ID in secretsmanager for use on the next execution. Then iterates through each event since the last known event ID executing all loaded modules and sub-modules.
+
+Each module is responsible for carrying out its area of responsibility. It will be executed in a separate go-routine and given each full-parsed event for processing. Modules can decline to process a particular event by returning the `modules.NotApplicableErr` to indicate no action was taken.
 
 ## Repository contents
 
-[handler](handler/) - Golang Lambda function handler to parse logs and send eMail
+[lambda](lambda/) - Golang Lambda function handler to parse logs
 [terraform](https://github.com/GSA/grace-log-parser) - Terraform module to install the Lambda function and set IAM role, policy, triggers and environment variables
 
 ## Usage
@@ -63,6 +67,22 @@ module "grace-log-parser" {
 | ------------ | ----------- |
 | grace-log-parser-name | Function name of grace-log-parser Lambda function |
 | grace-log-parser-arn | ARN of grace-log-parser Lambda function |
+
+
+## Environment Variables ##
+
+| Name | Description |
+| ---- | ----------- |
+| DISABLED_MODULES | A comma delimited list of modules and sub-modules to disable |
+
+
+## Modules and Sub-modules ##
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| email | module | Enables email notification and all sub-modules |
+| email.login | sub-module | Sends email on console login |
+
 
 ## Public domain
 

@@ -1,0 +1,26 @@
+<head>
+    <style>
+        body { color: #232F3E; }
+        table {border-collapse: collapse; border: 1px solid #232F3E;}
+        td, th {padding: 10px;}
+        th {background-color: #232F3E; color: White; font-weight: bold;}
+        tr:nth-child(even) {background: #eeeeee;}
+        tr:nth-child(odd) {background: White;}
+        tr td:first-child { text-align: right; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>{{.Event.Type}} in {{.AccountAlias}}</h1>
+    <table>
+        <tr><th colspan="2">Event Details</th></tr>
+        <tr><td>Event Type</td><td>{{.Event.Type}}</td></tr>
+        <tr><td>Event ID</td><td>{{.Event.ID}}</td></tr>
+        <tr><td>Event Time</td><td>{{.Event.Time}}</td></tr>
+        <tr><td>Event Name</td><td>{{.Event.Name}}</td></tr>
+        <tr><td>User Agent</td><td>{{.Event.UserAgent}}</td></tr>
+        <tr><td>AWS Region</td><td>{{.Event.Region}}</td></tr>
+        <tr><td>Source IP Address</td><td>{{.Event.SourceIPAddress}}</td></tr>
+    </table>
+    <br/>
+    {{.Detail}}
+</body>
