@@ -47,7 +47,7 @@ endif
 dependencies: $(GOLANGCILINT) $(GOSEC) $(GHR)
 
 $(GOLANGCILINT):
-	GO111MODULE=on go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.32.0
+	GO111MODULE=on go get -u github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0
 
 $(GOSEC):
 	go get -u github.com/securego/gosec/cmd/gosec
