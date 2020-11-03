@@ -2,7 +2,7 @@ data "aws_iam_account_alias" "current" {}
 
 resource "aws_lambda_function" "self" {
   filename         = var.source_file
-  source_code_hash = filesha256(var.source_file)
+  source_code_hash = filebase64sha256(var.source_file)
   function_name    = "grace-${var.env}-log-parser"
   role             = aws_iam_role.self.arn
   handler          = "grace-log-parser"
