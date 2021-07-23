@@ -24,6 +24,7 @@ resource "aws_iam_policy" "self" {
   path        = "/"
   description = "IAM policy for logging from a lambda"
 
+  #tfsec:ignore:AWS099
   policy = <<END_OF_POLICY
 {
     "Version": "2012-10-17",
